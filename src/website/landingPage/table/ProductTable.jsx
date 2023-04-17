@@ -35,29 +35,35 @@ export default function AdminProduct() {
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
-  //   useEffect(() => {
-  //     getProducts();
-  //   }, []);
-  //   function handleProduct(product) {
-  //     setSlectedProduct(product);
-  //     handleOpen();
-  //   }
+  useEffect(() => {
+    getProducts();
+  }, []);
+  // function handleProduct(product) {
+  //   setSlectedProduct(product);
+  // handleOpen();
+  // }
 
-  //   function getProducts() {
-  //     setLoadingData(true);
-  //     axios
-  //       .get("https://square-perch-32.hasura.app/v1/graphql/product/product")
-  //       .then((response) => {
-  //         setApiResponse(response.data);
-  //         setLoadingData(false);
-  //         console.log(response.data);
-  //       })
-  //       .catch(function (error) {
-  //         console.log(error);
-  //         setApiResponse(error.response.data);
-  //         setLoadingData(false);
-  //       });
-  //   }
+  function getProducts() {
+    const config = {
+      headers:{
+        'content-type':'application/json',
+        'x-hasura-admin-secret':'qh0XvtmBpH9OfM5G7Avq6NrwPzucdwLdWJTm31MgEQQ36tZ2hK0QXdPc0awnbvKi',
+      }
+    }
+    setLoadingData(true);
+    axios
+      .get("https://neat-iguana-49.hasura.app/api/rest/products",config)
+      .then((response) => {
+        // setApiResponse(response.data);
+        // setLoadingData(false);
+        console.log(response.data);
+      })
+      .catch(function (error) {
+        console.log(error);
+        // setApiResponse(error.response.data);
+        // setLoadingData(false);
+      });
+  }
 
   //   function deletepost(i) {
   //     axios
