@@ -38,63 +38,53 @@ export default function AdminProduct() {
   useEffect(() => {
     getProducts();
   }, []);
-  // function handleProduct(product) {
-  //   setSlectedProduct(product);
-  // handleOpen();
-  // }
+  function handleProduct(product) {
+    setSlectedProduct(product);
+    handleOpen();
+  }
 
   function getProducts() {
-    const config = {
-      headers:{
-        'content-type':'application/json',
-        'x-hasura-admin-secret':'qh0XvtmBpH9OfM5G7Avq6NrwPzucdwLdWJTm31MgEQQ36tZ2hK0QXdPc0awnbvKi',
-      }
-    }
     setLoadingData(true);
     axios
-      .get("https://neat-iguana-49.hasura.app/api/rest/products",config)
+      .get(`${apiUrl.baseUrl}/products`)
       .then((response) => {
-        // setApiResponse(response.data);
-        // setLoadingData(false);
-        console.log(response.data);
+        setApiResponse(response.data.products);
+        setLoadingData(false);
+        console.log(response.data.products);
       })
       .catch(function (error) {
         console.log(error);
-        // setApiResponse(error.response.data);
-        // setLoadingData(false);
+        setApiResponse(error.response);
+        setLoadingData(false);
       });
   }
 
-  //   function deletepost(i) {
-  //     axios
-  //       .delete(`${apiUrl.baseUrl}/admin/products/${i}`)
-  //       .then((response) => {
-  //         setApiResponse((prevApiResponse) => {
-  //           let filteredData = prevApiResponse.data.filter(
-  //             (item) => item._id !== i
-  //           );
-  //           console.log("g", prevApiResponse.data);
-  //           return {
-  //             ...prevApiResponse,
-  //             data: [...filteredData],
-  //           };
-  //         });
-  //       })
-  //       .catch(function (error) {
-  //         console.log(error);
-  //         setApiResponse(error.response.data);
-  //       });
-  //   }
+  function deletepost(i) {
+    axios
+      .delete(`${apiUrl.baseUrl}/products/${i}`)
+      .then((response) => {
+        setApiResponse((prevApiResponse) => {
+          let filteredData = prevApiResponse.filter((item) => item.id !== i);
+          console.log("g", prevApiResponse);
+          return [...filteredData];
+        });
+      })
+      .catch(function (error) {
+        console.log(error);
+        setApiResponse(error.response);
+      });
+  }
 
   function editpost(i) {
     navigate({
-      pathname: "/admin/create-product",
+      pathname: "/create-product",
       search: `?id=${i}`,
     });
   }
 
   return (
     <>
+      <h1>Products</h1>
       <Box
         display="flex"
         justifyContent="flex-end"
@@ -126,9 +116,9 @@ export default function AdminProduct() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {apiResponse?.data.map((r) => {
+            {apiResponse?.map((r) => {
               return (
-                <TableRow sx={{ bgcolor: "#e3f2fd" }} key={r._id}>
+                <TableRow sx={{ bgcolor: "#e3f2fd" }} key={r.id}>
                   <TableCell>
                     <Typography fontWeight="bold" component="h2">
                       {r.name}
@@ -159,9 +149,9 @@ export default function AdminProduct() {
                         sx={{ bgcolor: "#ff867c", pl: "2px", width: "32%" }}
                         type="button"
                         variant="text"
-                        // onClick={() => {
-                        //   deletepost(r._id);
-                        // }}
+                        onClick={() => {
+                          deletepost(r.id);
+                        }}
                       >
                         Delete
                       </Button>
@@ -170,14 +160,14 @@ export default function AdminProduct() {
                         type="button"
                         variant="text"
                         onClick={() => {
-                          editpost(r._id);
+                          editpost(r.id);
                         }}
                       >
                         Update
                       </Button>
                       <Button
                         sx={{ bgcolor: "#bbdefb", pl: "2px", width: "32%" }}
-                        // onClick={handleProduct.bind(this, r)}
+                        onClick={handleProduct.bind(this, r)}
                       >
                         Details
                       </Button>
@@ -186,12 +176,12 @@ export default function AdminProduct() {
                 </TableRow>
               );
             })}
-            {!loadingData && !apiResponse?.data.length && (
+            {!loadingData && !apiResponse?.length && (
               <TableRow>
                 <TableCell sx={{ width: "50" }}>No Post yet</TableCell>
               </TableRow>
             )}
-            {loadingData && !apiResponse?.data.length && (
+            {loadingData && !apiResponse?.length && (
               <TableRow align="center">
                 <TableCell>Data is being Loading</TableCell>
               </TableRow>
@@ -206,18 +196,22 @@ export default function AdminProduct() {
         aria-describedby="modal-modal-description"
       >
         <Box sx={style}>
-          <div style={{ display: "flex", gap: "72px" }}>
+          <div style={{}}>
+            <h1>Product Details</h1>
             <div
               style={{ display: "flex", flexDirection: "column", gap: "20px" }}
             >
-              <Typography fontWeight="bold" component="h2">
-                {slectedProduct?.name}
+              <Typography fontWeight="bold" component="h1">
+                Name
               </Typography>
-              <Typography fontWeight="bold" component="h2">
+              <Typography component="h2">{slectedProduct?.name}</Typography>
+              <Typography fontWeight="bold" component="h1">
+                Short Name
+              </Typography>
+              <Typography component="h2">
                 {slectedProduct?.shortName}
               </Typography>
               <Typography
-                fontWeight="bold"
                 sx={{
                   maxWidth: 200,
                   overflow: "hidden",
@@ -225,10 +219,10 @@ export default function AdminProduct() {
                 }}
                 component="h2"
               >
+                <Typography fontWeight="bold" component="h1">
+                  Description
+                </Typography>
                 {slectedProduct?.description}
-              </Typography>
-              <Typography fontWeight="bold" component="h2">
-                {slectedProduct?.productCategory?.name}
               </Typography>
             </div>
           </div>

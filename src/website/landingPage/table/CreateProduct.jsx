@@ -8,56 +8,69 @@ import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { useForm, Controller } from "react-hook-form";
-import { FormHelperText } from "@mui/material";
 import apiUrl from "../../../environment/enviroment";
 import axios from "axios";
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import {
-  Stack,
-  MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
-} from "@mui/material";
-
+import { Stack } from "@mui/material";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
+const schema = yup
+  .object()
+  .shape({
+    id: yup.string(),
+    name: yup.string().max(10).required(),
+    shortName: yup.string().max(10).required(),
+    description: yup.string().min(5).required(),
+  })
+  .required();
 const theme = createTheme();
 
 export default function CreateProduct() {
-  const [apiResponse, setApiResponse] = useState(null);
+  const [, setApiResponse] = useState(null);
   const navigate = useNavigate();
+  const [, setProductData] = useState(null);
   let [searchParams] = useSearchParams();
-  const [productCategories, setProductCategories] = useState([]);
-
-  const { handleSubmit, setValue, control, clearErrors } = useForm({
+  const {
+    handleSubmit,
+    setValue,
+    control,
+    formState: { errors },
+  } = useForm({
     mode: "all",
+    resolver: yupResolver(schema),
   });
-
   useEffect(() => {
-    // getProductList();
-    // if (searchParams.get("id")) {
-    //   console.log(searchParams.get("id"));
-    //   axios
-    //     .get(`${apiUrl.baseUrl}/admin/products/${searchParams.get("id")}`)
-    //     .then((response) => {
-    //       console.log("asdf", response.data.data.productCategory._id);
-    //       setValue("id", response.data.data._id);
-    //       setValue("name", response.data.data.name);
-    //       setValue("shortName", response.data.data.shortName);
-    //       setValue("description", response.data.data.description);
-    //       setValue("productCategoryId", response.data.data.productCategory._id);
-    //     })
-    //     .catch(function (error) {
-    //       console.log(error);
-    //       setApiResponse(error.response.data);
-    //     });
-    // }
+    if (searchParams.get("id")) {
+      axios
+        .get(`${apiUrl.baseUrl}/products/${searchParams.get("id")}`)
+        .then((response) => {
+          console.log(response.data.products_by_pk);
+          setProductData({ ...response.data.products_by_pk });
+          setValue("name", response.data.products_by_pk.name);
+          setValue("shortName", response.data.products_by_pk.shortName);
+          setValue("description", response.data.products_by_pk.description);
+          setValue("id", response.data.products_by_pk.id);
+        })
+        .catch(function (error) {
+          console.log(error);
+          setApiResponse(error.response.data);
+        });
+    }
   }, []);
+  function onSubmit(formData) {
+    if (searchParams.get("id")) {
+      editData(formData, searchParams.get("id"));
+    } else {
+      addData(formData);
+    }
+  }
+
   function addData(fData) {
     axios
-      .post("https://square-perch-32.hasura.app/api/rest/product", fData)
+      .post(`${apiUrl.baseUrl}/products`, fData)
       .then((response) => {
-        setApiResponse(response.data);
+        setApiResponse(response.data.products);
         navigate("/");
       })
       .catch(function (error) {
@@ -66,48 +79,18 @@ export default function CreateProduct() {
       });
   }
 
-  function onSubmit(formData) {
-    let fData = new FormData();
-    fData.append("name", formData.name);
-    fData.append("shortName", formData.shortName);
-    fData.append("description", formData.description);
-    fData.append("productCategoryId", formData.productCategoryId);
-    if (searchParams.get("id")) {
-      if (typeof imageFile === "string") {
-        editData(formData, searchParams.get("id"));
-      } else {
-        editData(fData, searchParams.get("id"));
-      }
-    } else {
-      addData(fData);
-    }
-  }
-  //   function getProductList() {
-  //     axios
-  //       .get(`${apiUrl.baseUrl}/admin/productCategories`)
-  //       .then((response) => {
-  //         setProductCategories(response.data.data);
-  //         console.log(response.data.data);
-  //       })
-  //       .catch(function (error) {
-  //         console.log(error);
-  //         setProductCategories(error.response.data);
-  //       });
-  //   }
-
   function editData(fData, id) {
     axios
-      .put(`${apiUrl.baseUrl}/admin/products/${id}`, fData)
+      .put(`${apiUrl.baseUrl}/products/${id}`, fData)
       .then((response) => {
-        setApiResponse(response.data);
-        navigate("/admin/product");
+        setApiResponse(response.data.products_by_pk);
+        navigate("/");
       })
       .catch(function (error) {
         console.log(error);
         setApiResponse(error.response.data);
       });
   }
-
   return (
     <>
       <ThemeProvider theme={theme}>
@@ -137,7 +120,13 @@ export default function CreateProduct() {
                     name="name"
                     defaultValue=""
                     render={({ field }) => (
-                      <TextField {...field} fullWidth label="Name" />
+                      <TextField
+                        error={!errors.name?.type ? false : true}
+                        helperText={errors.name?.message}
+                        {...field}
+                        fullWidth
+                        label="Name"
+                      />
                     )}
                   />
                 </Grid>
@@ -147,7 +136,13 @@ export default function CreateProduct() {
                     name="shortName"
                     defaultValue=""
                     render={({ field }) => (
-                      <TextField {...field} fullWidth label="Short Name" />
+                      <TextField
+                        error={!errors.shortName?.type ? false : true}
+                        helperText={errors.shortName?.message}
+                        {...field}
+                        fullWidth
+                        label="Short Name"
+                      />
                     )}
                   />
                 </Grid>
@@ -159,24 +154,25 @@ export default function CreateProduct() {
                     id="filled-multiline-static"
                     render={({ field }) => (
                       <TextField
+                        error={!errors.description?.type ? false : true}
+                        helperText={errors.description?.message}
                         {...field}
                         fullWidth
-                        label="Description"
                         multiline
                         rows={4}
+                        label="Description"
                       />
                     )}
                   />
                 </Grid>
               </Grid>
               <Button
-                // onClick={handleSubmit}
+                onClick={handleSubmit}
                 type="submit"
                 fullWidth
                 variant="contained"
               >
-                Add
-                {/* {searchParams.get("id") ? "Update" : "Add"} */}
+                {searchParams.get("id") ? "Update" : "Add"}
               </Button>
               <Stack>
                 <Button

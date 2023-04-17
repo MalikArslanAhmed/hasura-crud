@@ -1,5 +1,5 @@
 const apiUrl = {
-  baseUrl: "http://localhost:3000/api",
+  baseUrl: "https://neat-iguana-49.hasura.app/api/rest",
 };
 
 export default apiUrl;
