@@ -29,7 +29,6 @@ const theme = createTheme();
 export default function CreateProduct() {
   const [, setApiResponse] = useState(null);
   const navigate = useNavigate();
-  const [, setProductData] = useState(null);
   let [searchParams] = useSearchParams();
   const {
     handleSubmit,
@@ -46,7 +45,6 @@ export default function CreateProduct() {
         .get(`${apiUrl.baseUrl}/products/${searchParams.get("id")}`)
         .then((response) => {
           console.log(response.data.products_by_pk);
-          setProductData({ ...response.data.products_by_pk });
           setValue("name", response.data.products_by_pk.name);
           setValue("shortName", response.data.products_by_pk.shortName);
           setValue("description", response.data.products_by_pk.description);
